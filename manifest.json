@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Salesforce CRM Dashboard",
+  "version": "1.0.0",
+  "description": "Salesforce CRM management",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["http://localhost:3000/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
