@@ -11,15 +11,26 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ✅ Middleware
 app.use(cors({
-  origin: '*',
+  origin: process.env.ALLOWED_ORIGIN || '*', // Future me sirf extension origin daal dena
   credentials: true
 }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Health check endpoint - Extension ke liye
+// ✅ Root endpoint (for Railway / sanity check)
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    service: 'Salesforce Dashboard API',
+    message: 'Welcome! Server is live 🚀',
+    docs: '/api/health',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ✅ Health check endpoint (Extension ke liye)
 app.get('/api/health', (req, res) => {
   res.json({ 
     success: true, 
@@ -29,32 +40,40 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
+// ✅ API Routes
+app.use('/api', (req, res, next) => {
+  console.log(`➡️ API Request: ${req.method} ${req.originalUrl}`);
+  next();
+});
 app.use('/api', accountRoutes);
 app.use('/api', leadRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', opportunityRoutes);
 
-// Error Handler
+// ✅ Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('❌ Error:', err.stack);
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
-// Start Server and Connect to Salesforce
-app.listen(PORT, async () => {
+// ✅ Start Server and Connect to Salesforce
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   try {
     await loginToSalesforce();
-    console.log('✅ Ready to handle requests!');
-    console.log('📱 Chrome Extension can now connect');
+    console.log('✅ Connected to Salesforce. Ready to handle requests!');
+    console.log('📱 Chrome Extension can now connect.');
   } catch (e) {
-    console.log('❌ Salesforce credentials error.');
+    console.error('❌ Salesforce credentials error:', e.message);
   }
 });
 
-// Graceful Shutdown
+// ✅ Graceful Shutdown
 process.on('SIGINT', () => {
-  console.log('Shutting down...');
+  console.log('🛑 Shutting down gracefully...');
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  console.log('🛑 Terminated by platform...');
   process.exit(0);
 });
